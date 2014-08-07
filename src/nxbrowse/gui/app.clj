@@ -133,6 +133,4 @@
     (reset! root-frame (init-gui))
     (-> @root-frame
       center!
-      show!)
-
-    ))
+      show!)))

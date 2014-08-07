@@ -52,19 +52,21 @@
   [{:keys [node data-get type]}]
   #_{"test" "tesst"}
   (conj
-    {"Child Count" (.getChildCount node)
-     "Child Index" (.getFirstChildIndex node)}
     (case type
           :long {"Integral Data" (data-get)}
           :double {"Floating Data" (data-get)}
           :string {"Text Length" (.length (data-get))}
+          :point {"x" (.x (data-get))
+                  "y" (.y (data-get))}
           :bitmap {"Horizontal Res"  "?"
                    "Vertical Res"    "?"
                    "Data Size (KiB)" "?"}
           :audio {"Audio Length"    "?"
                   "Format"          "?"
                   "Data Size (KiB)" "?"}
-          {})))
+          {})
+    {"Child Index" (.getFirstChildIndex node)
+     "Child Count" (.getChildCount node)}))
 
 (defn nx-data-text-simple
   "Returns an NXNode's representation as text only if it can be displayed simply
