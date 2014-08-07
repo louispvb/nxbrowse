@@ -11,6 +11,37 @@
             [nxbrowse.util :refer [root-frame
                                    border-color]]))
 
+(defn get-system-lafs
+  "Returns a seq of system LAFs."
+  []
+  (seq (UIManager/getInstalledLookAndFeels)))
+
+(defn set-osx-shortcuts
+  []
+  (let [input-map (UIManager/get "TextField.focusInputMap")
+        mapping {"menu C" DefaultEditorKit/copyAction
+                 "menu V" DefaultEditorKit/pasteAction
+                 "menu X" DefaultEditorKit/cutAction
+                 "menu A" DefaultEditorKit/selectAllAction}]
+    (doseq [[k v] mapping]
+      (.put input-map (keystroke k) v))))
+
+(defn set-theme
+  [theme-class-name]
+  (try
+    (UIManager/setLookAndFeel theme-class-name)
+    (JFrame/setDefaultLookAndFeelDecorated false)
+    (JDialog/setDefaultLookAndFeelDecorated false)
+    (when @root-frame
+      (SwingUtilities/updateComponentTreeUI @root-frame))
+    (when (= (System/getProperty "os.name") "Mac OS X")
+      (set-osx-shortcuts))
+    (log/info "Current LAF: " (.getID (UIManager/getLookAndFeel)))
+    (log/debug "Supported LAFs:")
+    (doseq [laf (get-system-lafs)]
+      (log/debug (.getName laf) ": " (.getClassName laf)))
+    (catch Exception e (println "Could not set LAF: " (.getMessage e)))))
+
 (defn init-gui
   "Instantiates all components of main window. Returns the root frame."
   []
@@ -18,6 +49,17 @@
         (.. (UIManager/getDefaults)
             (getColor "Label.background")
             (darker))
+
+        lafs ["org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel"
+              "javax.swing.plaf.nimbus.NimbusLookAndFeel"
+              (UIManager/getSystemLookAndFeelClassName)
+              "org.pushingpixels.substance.api.skin.SubstanceMistSilverLookAndFeel"
+              "javax.swing.plaf.metal.MetalLookAndFeel"
+              "org.pushingpixels.substance.api.skin.SubstanceBusinessBlueSteelLookAndFeel"
+              "org.pushingpixels.substance.api.skin.SubstanceDustLookAndFeel"
+              ;Gags
+              "com.sun.java.swing.plaf.motif.MotifLookAndFeel"
+              "org.pushingpixels.substance.api.skin.SubstanceChallengerDeepLookAndFeel"]
 
         tree-panel (mig-panel :id :tree-panel
                               :constraints ["insets 0"] :items [])
@@ -30,8 +72,46 @@
                               :rows []]))
 
         file-menu [(action :name "Open" :tip "Open an nx file"
-                           :key "menu O" :handler file-open-handler)]
-                                                            ; TODO: ENTER key goes, select all text on focus
+                           :key "menu O" :handler file-open-handler)
+                   :separator
+
+                   (action :name "Quit"
+                           :key "menu Q"
+                           :handler (fn [e]
+                                      (.dispose (to-frame e))
+                                      (System/exit 0)))]
+        view-menu [(action :name "Header Information")
+                   :separator
+                   (let [bg (button-group)]
+                     (menu
+                       :text "Select Theme"
+                       :items [(radio-menu-item
+                                 :text "Graphite" :group bg :selected? true
+                                 :listen [:action (fn [_]
+                                                    (set-theme (lafs 0)))])
+                               (radio-menu-item
+                                 :text "Nimbus" :group bg
+                                 :listen [:action (fn [_]
+                                                    (set-theme (lafs 1)))])
+                               (radio-menu-item
+                                 :text "System" :group bg
+                                 :listen [:action (fn [_]
+                                                    (set-theme (lafs 2)))])
+                               (radio-menu-item
+                                 :text "Silver Mist" :group bg
+                                 :listen [:action (fn [_]
+                                                    (set-theme (lafs 3)))])
+                               (radio-menu-item
+                                 :text "Metal" :group bg
+                                 :listen [:action (fn [_]
+                                                    (set-theme (lafs 4)))])
+                               ]))]
+
+        help-menu
+        [(action :name "About"
+                 :handler (fn [_]
+                            (alert "http://github.com/louispvb/nxbrowse")))]
+; TODO: ENTER key goes, select all text on focus
         path-bar
         (mig-panel
           :constraints ["fill" "5[][]5" "2[]2"]
@@ -39,14 +119,17 @@
                   [(button :text "Go"
                            :listen [:action navigate-path-handler]) ""]]
           :border (line-border :bottom 1 :color border-color))
-                                                            ; TODO: Add progress bar on left that shows only when loading
+; TODO: Add progress bar on left that shows only when loading
         info-bar
         (mig-panel
           :constraints ["fill" "5[][]5" "2[]2"]
           :items [[(label :id :node-count :text "") ""]
                   [(label "PROGRESSBAR") "align right"]]
           :border (line-border :top 1 :color border-color))
-        menu-bar (menubar :items [(menu :text "File" :items file-menu)])
+
+        menu-bar (menubar :items [(menu :text "File" :items file-menu)
+                                  (menu :text "View" :items view-menu)
+                                  (menu :text "Help" :items help-menu)])
 
         content-panel
         (mig-panel
@@ -83,45 +166,14 @@
   (.setAlwaysOnTop frame true)
   frame)
 
-(defn get-system-lafs
-  "Returns a seq of system LAFs."
-  []
-  (seq (UIManager/getInstalledLookAndFeels)))
-
-(defn set-osx-shortcuts
-  []
-  (let [input-map (UIManager/get "TextField.focusInputMap")
-        mapping {"menu C" DefaultEditorKit/copyAction
-                 "menu V" DefaultEditorKit/pasteAction
-                 "menu X" DefaultEditorKit/cutAction
-                 "menu A" DefaultEditorKit/selectAllAction}]
-    (doseq [[k v] mapping]
-      (.put input-map (keystroke k) v))))
-
-(defn set-theme
-  [theme-class-name]
-  (try
-    (UIManager/setLookAndFeel theme-class-name)
-    (JFrame/setDefaultLookAndFeelDecorated false)
-    (JDialog/setDefaultLookAndFeelDecorated false)
-    (when @root-frame
-      (SwingUtilities/updateComponentTreeUI @root-frame))
-    (when (= (System/getProperty "os.name") "Mac OS X")
-      (set-osx-shortcuts))
-    (log/info "Current LAF: " (.getID (UIManager/getLookAndFeel)))
-    (log/debug "Supported LAFs:")
-    (doseq [laf (get-system-lafs)]
-      (log/debug (.getName laf) ": " (.getClassName laf)))
-    (catch Exception e (println "Could not set LAF: " (.getMessage e)))))
-
 (defn open-app []
   (invoke-later
     (set-theme
-      ;"org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel"
-      ;"org.pushingpixels.substance.api.skin.SubstanceBusinessLookAndFeel"
+      "org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel"
       ;"org.pushingpixels.substance.api.skin.SubstanceMistSilverLookAndFeel"
+      ;"org.pushingpixels.substance.api.skin.SubstanceBusinessLookAndFeel"
       ;(UIManager/getSystemLookAndFeelClassName)
-      "javax.swing.plaf.nimbus.NimbusLookAndFeel"
+      ;"javax.swing.plaf.nimbus.NimbusLookAndFeel"
       ;"javax.swing.plaf.metal.MetalLookAndFeel"
       ;"com.sun.java.swing.plaf.gtk.GTKLookAndFeel"
       ;"org.pushingpixels.substance.api.skin.SubstanceBusinessBlueSteelLookAndFeel"

@@ -10,11 +10,11 @@
 ;TODO: hook up properties panel to audio and bitmap properties and texts
 ;TODO: Add autoplay configuration
 ;TODO: search by depth and path (default selected path in textbox grayed out) (default radiobutton search from root)
+;TODO: recently opened
 
 (defn -main
   [& args]
   (System/setProperty "apple.laf.useScreenMenuBar" "false")
   (log/infof "Starting nxbrowse")
   (try (open-app)
-       (catch Exception e (log/warn "Unhandled exception: " (.getMessage e))))
-  0)
+       (catch Exception e (log/warn "Unhandled exception: " (.getMessage e)))))

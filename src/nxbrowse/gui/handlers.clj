@@ -30,7 +30,7 @@
         (text! (select-id :#tree-path)
                (clojure.string/join "/" (.getPath path)))
         (clear! props-table)
-        (doseq [[row-num row] (map-indexed list (reverse props))]
+        (doseq [[row-num row] (map-indexed list props)]
           (insert-at! props-table row-num
                       {:property (nth row 0) :value (nth row 1)}))))))
 

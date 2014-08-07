@@ -50,23 +50,22 @@
 (defn nx-property-map
   "Get an NXNode's map of properties."
   [{:keys [node data-get type]}]
-  #_{"test" "tesst"}
   (conj
-    (case type
-          :long {"Integral Data" (data-get)}
-          :double {"Floating Data" (data-get)}
-          :string {"Text Length" (.length (data-get))}
-          :point {"x" (.x (data-get))
-                  "y" (.y (data-get))}
-          :bitmap {"Horizontal Res"  "?"
-                   "Vertical Res"    "?"
-                   "Data Size (KiB)" "?"}
-          :audio {"Audio Length"    "?"
-                  "Format"          "?"
-                  "Data Size (KiB)" "?"}
-          {})
-    {"Child Index" (.getFirstChildIndex node)
-     "Child Count" (.getChildCount node)}))
+    (array-map "Child Count" (.getChildCount node)
+               "Child Index" (.getFirstChildIndex node))
+    (reverse (case type
+               :long (array-map "Integral Data" (data-get))
+               :double (array-map "Floating Data" (data-get))
+               :string (array-map "Text Length" (.length (data-get)))
+               :point (array-map "x" (.x (data-get))
+                                 "y" (.y (data-get)))
+               :bitmap (array-map "Horizontal Res" "?"
+                                  "Vertical Res" "?"
+                                  "Data Size (KiB)" "?")
+               :audio (array-map "Audio Length" "?"
+                                 "Format" "?"
+                                 "Data Size (KiB)" "?")
+               (array-map)))))
 
 (defn nx-data-text-simple
   "Returns an NXNode's representation as text only if it can be displayed simply
