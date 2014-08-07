@@ -1,7 +1,6 @@
 (ns nxbrowse.gui.tree-table
   (:import (org.jdesktop.swingx.treetable AbstractTreeTableModel)
            (org.jdesktop.swingx JXTreeTable)
-           (javax.swing.event TreeSelectionListener TreeSelectionEvent)
            (us.aaronweiss.pkgnx NXNode))
   (:require [clojure.tools.logging :as log]
             [seesaw.core :refer :all]
@@ -19,16 +18,6 @@
       (.scrollRectToVisible
         (.getCellRect tree-table (.getRowForPath tree-table path) 0 true)))))
 
-;TODO: audio and bitmap selections
-(defn create-tree-selection-listener
-  []
-  (reify
-    TreeSelectionListener
-    (valueChanged [this e]
-      (let [path (.getPath e)]
-        (text! (select @root-frame [:#tree-path])
-               (clojure.string/join "/" (.getPath path)))))))
-
 (defn create-nxtreetable-model
   [root]
   (let [columns ["Name" "Type" "Data"]]
@@ -39,14 +28,14 @@
       (getChildCount [parent] (.getChildCount parent))
       (getValueAt
         [node column-num]
+        (let [meta (nx-attach-meta node)]
         (case column-num
           0 (.getName node)
-          1 (:name (nx-data-meta node))
-          2 (nx-data-text node)
-          ""))
+          1 (:name meta)
+          2 (nx-data-text-simple meta)
+          "")))
       (getIndexOfChild
         [parent child]
-        (log/debug "Indexing " (.getName child))
         (.indexOf (vec parent) child))
       (getChild
         [parent index]
@@ -63,5 +52,4 @@
     (resize-column 1 50)
     (resize-column 2 width)
     (.setScrollsOnExpand tree-table true)
-    (.addTreeSelectionListener tree-table (create-tree-selection-listener))
     tree-table))

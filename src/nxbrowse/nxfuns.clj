@@ -1,57 +1,77 @@
 (ns nxbrowse.nxfuns
   (:import (us.aaronweiss.pkgnx.nodes NXNullNode NXLongNode NXDoubleNode
                                       NXStringNode NXPointNode NXBitmapNode
-                                      NXAudioNode))
+                                      NXAudioNode)
+           java.awt.Point)
   (:require [clojure.tools.logging :as log]))
 
-(defn nx-data-meta
-  "Get an NXNode's meta info."
+(defn nx-attach-meta
+  "Attaches some meta data to a node for easier processing."
   [nxnode]
-  (cond
-    (instance? NXNullNode nxnode)
-    {:type :null,
-     :name "",
-     :id   0}
-    (instance? NXLongNode nxnode)
-    {:type     :long,
-     :name     "integral",
-     :id       1
-     :data-get #(.getLong %)}
-    (instance? NXDoubleNode nxnode)
-    {:type     :double,
-     :name     "floating",
-     :id       2
-     :data-get #(.getDouble %)}
-    (instance? NXStringNode nxnode)
-    {:type     :string,
-     :name     "text",
-     :id       3
-     :data-get #(.getString %)}
-    (instance? NXPointNode nxnode)
-    {:type     :point,
-     :name     "point",
-     :id       4
-     :data-get (fn [n] (let [p (.getPoint n)]
-                         (format "[x:%d, y:%d]" (.x p) (.y p))))}
-    (instance? NXBitmapNode nxnode)
-    {:type :bitmap,
-     :name "bitmap",
-     :id   5}
-    (instance? NXAudioNode nxnode)
-    {:type :audio,
-     :name "audio",
-     :id   6}
-    :else (do (log/warnf "Can't determine node type of \"%s\"."
-                         (.getName nxnode))
-              {:type :null
-               :name "INVALID NODE"
-               :id -1})))
+  (conj (cond
+          (instance? NXNullNode nxnode)
+          {:type     :null
+           :name     ""
+           :data-get (constantly nil)}
+          (instance? NXLongNode nxnode)
+          {:type     :long
+           :name     "integral"
+           :data-get (fn [] (.getLong nxnode))}
+          (instance? NXDoubleNode nxnode)
+          {:type     :double
+           :name     "floating"
+           :data-get (fn [] (.getDouble nxnode))}
+          (instance? NXStringNode nxnode)
+          {:type     :string
+           :name     "text"
+           :data-get (fn [] (.getString nxnode))}
+          (instance? NXPointNode nxnode)
+          {:type     :point
+           :name     "point"
+           :data-get (fn [] (.getPoint nxnode))}
+          (instance? NXBitmapNode nxnode)
+          {:type     :bitmap
+           :name     "bitmap"
+           :data-get (fn [] (.getImage nxnode))}
+          (instance? NXAudioNode nxnode)
+          {:type     :audio
+           :name     "audio"
+           :data-get (fn [] (.getAudioBuf nxnode))}
+          :else (do (log/warnf "Exception: Can't determine node type of \"%s\"."
+                               (.getName nxnode))
+                    {:type :null
+                     :name "INVALID NODE"
+                     :data (constantly nil)}))
+        {:node nxnode}))
 
-(defn nx-data-text
+;TODO bitmap resolution
+;TODO audio length, type
+
+(defn nx-property-map
+  "Get an NXNode's map of properties."
+  [{:keys [node data-get type]}]
+  #_{"test" "tesst"}
+  (conj
+    {"Child Index" (.getFirstChildIndex node)
+     "Child Count" (.getChildCount node)}
+    (case type
+          :long {"Integral Data" (data-get)}
+          :double {"Floating Data" (data-get)}
+          :string {"Text Length" (.length (data-get))}
+          :bitmap {"Horizontal Res"  "?"
+                   "Vertical Res"    "?"
+                   "Data Size (KiB)" "?"}
+          :audio {"Audio Length"    "?"
+                  "Format"          "?"
+                  "Data Size (KiB)" "?"}
+          {})))
+
+(defn nx-data-text-simple
   "Returns an NXNode's representation as text only if it can be displayed simply
   as so (no binary data)."
-  [nxnode]
-  (let [meta (nx-data-meta nxnode)]
-    (if (contains? meta :data-get)
-      (str ((:data-get meta) nxnode))
-      "")))
+  [{:keys [type data-get]}]
+  (if (contains? #{:long :double :string :point} type)
+    (if (= type :point)
+      (let [p (data-get)] (format "[x:%s, y:%s]" (.x p) (.y p)))
+      (data-get))
+    ""))

@@ -20,12 +20,11 @@
                               :constraints ["insets 0"] :items [])
         view-panel (flow-panel :items [(label "view")])
         properties-panel
-        (border-panel
-          :center (scrollable (table
-                                :show-grid? false
-                                :model [:columns [:property :value]
-                                        :rows    [{:property "bla" :value 45}
-                                                  {:property "ahh" :value 13}]])))
+        (scrollable (table
+                      :id :properties
+                      :show-grid? false
+                      :model [:columns [:property :value]
+                              :rows    []]))
 
         file-menu [(action :name "Open" :tip "Open an nx file"
                            :key "menu O" :handler file-open-handler)]
@@ -54,7 +53,7 @@
                      (top-bottom-split
                        view-panel
                        properties-panel
-                       :divider-location 3/5)
+                       :divider-location 7/10)
                      :divider-location 3/5)
                    "dock center"]
                   [info-bar "dock south"]

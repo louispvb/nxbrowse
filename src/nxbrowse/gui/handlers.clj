@@ -2,13 +2,38 @@
   (:import (us.aaronweiss.pkgnx.internal NXHeader)
            (us.aaronweiss.pkgnx NXException LazyNXFile NXNode)
            (javax.swing.tree TreePath)
-           (java.awt.event KeyEvent))
+           (java.awt.event KeyEvent)
+           (javax.swing.event TreeSelectionListener))
   (:require [clojure.tools.logging :as log]
             [seesaw.core :refer :all]
+            [seesaw.table :refer [clear!
+                                  insert-at!]]
             [seesaw.chooser :refer [choose-file]]
+            [nxbrowse.nxfuns :refer [nx-attach-meta
+                                     nx-property-map]]
             [nxbrowse.my-atoms :refer :all]
             [nxbrowse.gui.tree-table :refer [create-tree-table
                                              scroll-to-path]]))
+
+;TODO: audio and bitmap selections
+(defn create-tree-selection-listener
+  []
+  (reify
+    TreeSelectionListener
+    (valueChanged [this e]
+      (let []
+        )
+      (let [path (.getPath e)
+            props-table (select @root-frame [:#properties])
+            node (.getLastPathComponent path)
+            props (nx-property-map (nx-attach-meta node))]
+        (text! (select @root-frame [:#tree-path])
+               (clojure.string/join "/" (.getPath path)))
+
+        (clear! props-table)
+        (doseq [[row-num row] (map-indexed list props)]
+          (insert-at! props-table row-num
+                      {:property (nth row 0) :value (nth row 1)}))))))
 
 (defn open-nx-file [file]
   "Initializes GUI components when nx file is opened. Sets opened-nx-file and
@@ -30,7 +55,8 @@
          (config!
            (select @root-frame [:#node-count])
            :text (format "Node Count: %d"
-                         (.getNodeCount (.getHeader @opened-nx-file)))))
+                         (.getNodeCount (.getHeader @opened-nx-file))))
+         (.addTreeSelectionListener @nxtree-table (create-tree-selection-listener)))
        (catch NXException e (log/warnf "Couldn't open invalid file \"%s\""
                                       (.getAbsolutePath file)))))
 
