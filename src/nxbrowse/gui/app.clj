@@ -1,5 +1,5 @@
 (ns nxbrowse.gui.app
-  (:import (javax.swing UIManager JFrame JDialog InputMap)
+  (:import (javax.swing UIManager JFrame JDialog InputMap SwingUtilities)
            (javax.swing.text DefaultEditorKit))
   (:require [seesaw.core :refer :all]
             [seesaw.border :refer :all]
@@ -8,14 +8,17 @@
             [seesaw.mig :refer [mig-panel]]
             [clojure.tools.logging :as log]
             [nxbrowse.gui.handlers :refer :all]
-            [nxbrowse.util :refer [root-frame]]))
+            [nxbrowse.util :refer [root-frame
+                                   border-color]]))
 
 (defn init-gui
   "Instantiates all components of main window. Returns the root frame."
   []
   (let [border-color
-        "#AAAAAA"
-        ;"#404040"
+        (.. (UIManager/getDefaults)
+            (getColor "Label.background")
+            (darker))
+
         tree-panel (mig-panel :id :tree-panel
                               :constraints ["insets 0"] :items [])
         view-panel (flow-panel :items [(label "view")])
@@ -24,11 +27,11 @@
                       :id :properties
                       :show-grid? false
                       :model [:columns [:property :value]
-                              :rows    []]))
+                              :rows []]))
 
         file-menu [(action :name "Open" :tip "Open an nx file"
                            :key "menu O" :handler file-open-handler)]
-        ; TODO: ENTER key goes, select all text on focus
+                                                            ; TODO: ENTER key goes, select all text on focus
         path-bar
         (mig-panel
           :constraints ["fill" "5[][]5" "2[]2"]
@@ -36,7 +39,7 @@
                   [(button :text "Go"
                            :listen [:action navigate-path-handler]) ""]]
           :border (line-border :bottom 1 :color border-color))
-        ; TODO: Add progress bar on left that shows only when loading
+                                                            ; TODO: Add progress bar on left that shows only when loading
         info-bar
         (mig-panel
           :constraints ["fill" "5[][]5" "2[]2"]
@@ -96,9 +99,24 @@
       (.put input-map (keystroke k) v))))
 
 (defn set-theme
-  []
+  [theme-class-name]
   (try
-    (UIManager/setLookAndFeel
+    (UIManager/setLookAndFeel theme-class-name)
+    (JFrame/setDefaultLookAndFeelDecorated false)
+    (JDialog/setDefaultLookAndFeelDecorated false)
+    (when @root-frame
+      (SwingUtilities/updateComponentTreeUI @root-frame))
+    (when (= (System/getProperty "os.name") "Mac OS X")
+      (set-osx-shortcuts))
+    (log/info "Current LAF: " (.getID (UIManager/getLookAndFeel)))
+    (log/debug "Supported LAFs:")
+    (doseq [laf (get-system-lafs)]
+      (log/debug (.getName laf) ": " (.getClassName laf)))
+    (catch Exception e (println "Could not set LAF: " (.getMessage e)))))
+
+(defn open-app []
+  (invoke-later
+    (set-theme
       ;"org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel"
       ;"org.pushingpixels.substance.api.skin.SubstanceBusinessLookAndFeel"
       ;"org.pushingpixels.substance.api.skin.SubstanceMistSilverLookAndFeel"
@@ -112,21 +130,9 @@
       ;"com.sun.java.swing.plaf.motif.MotifLookAndFeel"
       ;"org.pushingpixels.substance.api.skin.SubstanceChallengerDeepLookAndFeel"
       )
-    (JFrame/setDefaultLookAndFeelDecorated false)
-    (JDialog/setDefaultLookAndFeelDecorated false)
-    #_(map #(SwingUtilities/updateComponentTreeUI %) (Window/getWindows))
-    (log/info "Current LAF: " (.getID (UIManager/getLookAndFeel)))
-    (log/debug "Supported LAFs:")
-    (doseq [laf (get-system-lafs)]
-      (log/debug (.getName laf) ": " (.getClassName laf)))
-    (when (= (System/getProperty "os.name") "Mac OS X")
-      (set-osx-shortcuts))
-    (catch Exception e (println "Could not set LAF: " (.getMessage e)))))
-
-(defn open-app []
-  (invoke-later
-    (set-theme)
     (reset! root-frame (init-gui))
     (-> @root-frame
       center!
-      show!)))
+      show!)
+
+    ))
