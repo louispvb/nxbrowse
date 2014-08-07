@@ -6,7 +6,6 @@
 (def opened-nx-file (atom nil))
 (def nxtree-table (atom nil))
 (def root-frame (atom nil))
-(def border-color (atom nil))
 
 (defn select-id
   "Select widget id from root frame"

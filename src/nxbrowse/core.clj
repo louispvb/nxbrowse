@@ -5,12 +5,13 @@
 
 #_(native!)
 
+;TODO: set exit_on_close, dispose shortcut for debug
+;TODO: recently opened
 ;TODO: add trie autocompletion
 ;TODO: drag and drop bitmaps out of file and "save to file" feature
-;TODO: hook up properties panel to audio and bitmap properties and texts
+;TODO: hook up properties panel to audio and bitmap properties
 ;TODO: Add autoplay configuration
 ;TODO: search by depth and path (default selected path in textbox grayed out) (default radiobutton search from root)
-;TODO: recently opened
 
 (defn -main
   [& args]

@@ -8,8 +8,7 @@
             [seesaw.mig :refer [mig-panel]]
             [clojure.tools.logging :as log]
             [nxbrowse.gui.handlers :refer :all]
-            [nxbrowse.util :refer [root-frame
-                                   border-color]]))
+            [nxbrowse.util :refer [root-frame]]))
 
 (defn get-system-lafs
   "Returns a seq of system LAFs."
@@ -114,7 +113,6 @@
         [(action :name "About"
                  :handler (fn [_]
                             (alert "NXBrowse\nBrowser for PKG4 NX file format\nhttp://github.com/louispvb/nxbrowse")))]
-; TODO: ENTER key goes, select all text on focus
         path-bar
         (mig-panel
           :constraints ["fill" "5[][]5" "2[]2"]
@@ -122,12 +120,10 @@
                   [(button :text "Go"
                            :listen [:action navigate-path-handler]) ""]]
           :border (line-border :bottom 1 :color border-color))
-; TODO: Add progress bar on left that shows only when loading
         info-bar
         (mig-panel
           :constraints ["fill" "5[][]5" "2[]2"]
-          :items [[(label :id :node-count :text "") ""]
-                  [(label "PROGRESSBAR") "align right"]]
+          :items [[(label :id :node-count :text "") ""]]
           :border (line-border :top 1 :color border-color))
 
         menu-bar (menubar :items [(menu :text "File" :items file-menu)
