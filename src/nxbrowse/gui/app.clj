@@ -63,7 +63,7 @@
 
         tree-panel (mig-panel :id :tree-panel
                               :constraints ["insets 0"] :items [])
-        view-panel (flow-panel :items [(label "view")])
+        view-panel (border-panel :id :view-panel)
         properties-panel
         (scrollable (table
                       :id :properties
@@ -80,6 +80,8 @@
                            :handler (fn [e]
                                       (.dispose (to-frame e))
                                       (System/exit 0)))]
+        ; TODO create new frame instead of updating current frame theme
+        ; TODO make atom of currently selected theme and selected? for all
         view-menu [(action :name "Header Information"
                            :handler show-header-info)
                    :separator

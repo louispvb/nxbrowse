@@ -15,6 +15,21 @@
             [nxbrowse.gui.tree-table :refer [create-tree-table
                                              scroll-to-path]]))
 
+(defn view-node-dispatch
+  [{:keys [type data-get]}]
+  (let [view (select-id :#view-panel)]
+    (.removeAll view)
+    (case type
+      :string (.add view (scrollable (text :text (data-get)
+                                           :multi-line? true
+                                           :editable? false
+                                           :wrap-lines? true
+                                           :margin 10)))
+      nil)
+    (.validate view)
+    (.repaint view 50))
+  )
+
 ;TODO: audio and bitmap selections
 (defn create-tree-selection-listener
   []
@@ -27,11 +42,16 @@
             props-table (select-id :#properties)
             node (.getLastPathComponent path)
             props (nx-property-map (nx-attach-meta node))]
+        ; Set gui path
         (text! (select-id :#tree-path)
                (clojure.string/join "/" (.getPath path)))
+        ; Fill properties table
         (clear! props-table)
         (doseq [[row-num [k v]] (map-indexed list props)]
-          (insert-at! props-table row-num {:property k :value v}))))))
+          (insert-at! props-table row-num {:property k :value v}))
+        ; View node
+        (view-node-dispatch (nx-attach-meta node))
+        ))))
 
 (defn show-header-info [_]
   (if @opened-nx-file
