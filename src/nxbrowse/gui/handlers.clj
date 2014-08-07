@@ -30,9 +30,30 @@
         (text! (select-id :#tree-path)
                (clojure.string/join "/" (.getPath path)))
         (clear! props-table)
-        (doseq [[row-num row] (map-indexed list props)]
-          (insert-at! props-table row-num
-                      {:property (nth row 0) :value (nth row 1)}))))))
+        (doseq [[row-num [k v]] (map-indexed list props)]
+          (insert-at! props-table row-num {:property k :value v}))))))
+
+(defn show-header-info [_]
+  (if @opened-nx-file
+    (let [h (.getHeader @opened-nx-file)
+          t (table :preferred-size [300 :by 200]
+                   :model [:columns [:name :value]])
+          info (array-map "Total Node Count" (.getNodeCount h)
+                          "Node Offset" (.getNodeOffset h)
+                          "Bitmap Count" (.getBitmapCount h)
+                          "Bitmap Offset" (.getBitmapOffset h)
+                          "String Count" (.getStringCount h)
+                          "String Offset" (.getStringOffset h)
+                          "Sound Count" (.getSoundCount h)
+                          "Sound Offset" (.getSoundOffset h))
+          f (frame :title "NX File Header"
+                   :content t
+                   :on-close :dispose)]
+      (doseq [[row-num [k v]] (map-indexed list info)]
+        (insert-at! t row-num {:name k :value v}))
+      (-> f (pack!) (show!) (.setLocationRelativeTo nil))
+      )
+    (alert "A file must be opened to view header information.")))
 
 (defn open-nx-file [file]
   "Initializes GUI components when nx file is opened. Sets opened-nx-file and
@@ -40,13 +61,6 @@
   (try (when file
          (reset! opened-nx-file (LazyNXFile. (.getAbsolutePath file)))
          (reset! nxtree-table (create-tree-table (.getRoot @opened-nx-file)))
-         (let [header (.getHeader @opened-nx-file)]
-           (log/debug
-             "NXHeader Counts below"
-             "\nTotal Node Count: " (.getNodeCount header)
-             "\n    Bitmap Count: " (.getBitmapCount header)
-             "\n    String Count: " (.getStringCount header)
-             "\n     Sound Count: " (.getSoundCount header)))
          (config!
            (select-id :#tree-panel)
            :items [[(scrollable @nxtree-table)

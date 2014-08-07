@@ -80,7 +80,8 @@
                            :handler (fn [e]
                                       (.dispose (to-frame e))
                                       (System/exit 0)))]
-        view-menu [(action :name "Header Information")
+        view-menu [(action :name "Header Information"
+                           :handler show-header-info)
                    :separator
                    (let [bg (button-group)]
                      (menu
@@ -110,7 +111,7 @@
         help-menu
         [(action :name "About"
                  :handler (fn [_]
-                            (alert "http://github.com/louispvb/nxbrowse")))]
+                            (alert "NXBrowse\nBrowser for PKG4 NX file format\nhttp://github.com/louispvb/nxbrowse")))]
 ; TODO: ENTER key goes, select all text on focus
         path-bar
         (mig-panel
@@ -168,20 +169,7 @@
 
 (defn open-app []
   (invoke-later
-    (set-theme
-      "org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel"
-      ;"org.pushingpixels.substance.api.skin.SubstanceMistSilverLookAndFeel"
-      ;"org.pushingpixels.substance.api.skin.SubstanceBusinessLookAndFeel"
-      ;(UIManager/getSystemLookAndFeelClassName)
-      ;"javax.swing.plaf.nimbus.NimbusLookAndFeel"
-      ;"javax.swing.plaf.metal.MetalLookAndFeel"
-      ;"com.sun.java.swing.plaf.gtk.GTKLookAndFeel"
-      ;"org.pushingpixels.substance.api.skin.SubstanceBusinessBlueSteelLookAndFeel"
-      ;"org.pushingpixels.substance.api.skin.SubstanceDustLookAndFeel"
-      ;GAGS
-      ;"com.sun.java.swing.plaf.motif.MotifLookAndFeel"
-      ;"org.pushingpixels.substance.api.skin.SubstanceChallengerDeepLookAndFeel"
-      )
+    (set-theme "org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel")
     (reset! root-frame (init-gui))
     (-> @root-frame
       center!
