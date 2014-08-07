@@ -11,7 +11,7 @@
             [seesaw.chooser :refer [choose-file]]
             [nxbrowse.nxfuns :refer [nx-attach-meta
                                      nx-property-map]]
-            [nxbrowse.my-atoms :refer :all]
+            [nxbrowse.util :refer :all]
             [nxbrowse.gui.tree-table :refer [create-tree-table
                                              scroll-to-path]]))
 
@@ -24,12 +24,11 @@
       (let []
         )
       (let [path (.getPath e)
-            props-table (select @root-frame [:#properties])
+            props-table (select-id :#properties)
             node (.getLastPathComponent path)
             props (nx-property-map (nx-attach-meta node))]
-        (text! (select @root-frame [:#tree-path])
+        (text! (select-id :#tree-path)
                (clojure.string/join "/" (.getPath path)))
-
         (clear! props-table)
         (doseq [[row-num row] (map-indexed list props)]
           (insert-at! props-table row-num
@@ -49,11 +48,11 @@
              "\n    String Count: " (.getStringCount header)
              "\n     Sound Count: " (.getSoundCount header)))
          (config!
-           (select @root-frame [:#tree-panel])
+           (select-id :#tree-panel)
            :items [[(scrollable @nxtree-table)
                     "dock center"]])
          (config!
-           (select @root-frame [:#node-count])
+           (select-id :#node-count)
            :text (format "Node Count: %d"
                          (.getNodeCount (.getHeader @opened-nx-file))))
          (.addTreeSelectionListener @nxtree-table (create-tree-selection-listener)))
@@ -69,7 +68,7 @@
 
 (defn navigate-path-handler [_]
   (when @nxtree-table
-    (let [user-path (value (select @root-frame [:#tree-path]))
+    (let [user-path (value (select-id :#tree-path))
           split-path (rest (clojure.string/split user-path #"/"))
           node-path (reduce
                       (fn [acc s]

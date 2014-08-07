@@ -52,8 +52,8 @@
   [{:keys [node data-get type]}]
   #_{"test" "tesst"}
   (conj
-    {"Child Index" (.getFirstChildIndex node)
-     "Child Count" (.getChildCount node)}
+    {"Child Count" (.getChildCount node)
+     "Child Index" (.getFirstChildIndex node)}
     (case type
           :long {"Integral Data" (data-get)}
           :double {"Floating Data" (data-get)}

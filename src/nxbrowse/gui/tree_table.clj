@@ -4,7 +4,7 @@
            (us.aaronweiss.pkgnx NXNode))
   (:require [clojure.tools.logging :as log]
             [seesaw.core :refer :all]
-            [nxbrowse.my-atoms :refer [root-frame]]
+            [nxbrowse.util :refer [root-frame]]
             [nxbrowse.nxfuns :refer :all]))
 
 (defn scroll-to-path

@@ -13,5 +13,5 @@ A standalone binary jar will be included in the download section.
 
 ## License
 
-Copyright (C) 2014 louispvb <louispvb@gmail.com>
+Copyright (C) 2014 louispvb <louispvb@gmail.com>.
 This project is licensed under the terms of the GNU General Public License v3

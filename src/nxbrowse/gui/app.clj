@@ -8,7 +8,7 @@
             [seesaw.mig :refer [mig-panel]]
             [clojure.tools.logging :as log]
             [nxbrowse.gui.handlers :refer :all]
-            [nxbrowse.my-atoms :refer [root-frame]]))
+            [nxbrowse.util :refer [root-frame]]))
 
 (defn init-gui
   "Instantiates all components of main window. Returns the root frame."
