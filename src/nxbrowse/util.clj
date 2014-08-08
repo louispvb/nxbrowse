@@ -1,6 +1,5 @@
 (ns nxbrowse.util
-  (:require [seesaw.core :refer [select]]
-    ))
+  (:require [seesaw.core :refer [select]]))
 
 ; Dirty dirty mutable state!
 (def opened-nx-file (atom nil))

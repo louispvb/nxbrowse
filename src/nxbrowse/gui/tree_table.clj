@@ -7,8 +7,16 @@
             [nxbrowse.util :refer [root-frame]]
             [nxbrowse.nxfuns :refer :all]))
 
+(defn toggle-tree-sel
+  "Toggles currently selected path."
+  [tree]
+  (let [sel-path (-> tree (.getTreeSelectionModel) (.getSelectionPath))
+        _ (if (.isExpanded tree sel-path)
+            (.collapsePath tree sel-path)
+            (.expandPath tree sel-path))]))
+
 (defn scroll-to-path
-  "Scrolls, selects, and expands tree table to path"
+  "Scrolls, selects, and expands tree table to path."
   [tree-table path]
   (let [select-model (.getTreeSelectionModel tree-table)]
     (.clearSelection select-model)

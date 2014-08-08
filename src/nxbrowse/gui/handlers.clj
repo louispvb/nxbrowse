@@ -6,6 +6,7 @@
            (javax.swing.event TreeSelectionListener))
   (:require [clojure.tools.logging :as log]
             [seesaw.core :refer :all]
+            [seesaw.keymap :refer [map-key]]
             [seesaw.table :refer [clear!
                                   insert-at!]]
             [seesaw.chooser :refer [choose-file]]
@@ -13,7 +14,8 @@
                                      nx-property-map]]
             [nxbrowse.util :refer :all]
             [nxbrowse.gui.tree-table :refer [create-tree-table
-                                             scroll-to-path]]))
+                                             scroll-to-path
+                                             toggle-tree-sel]]))
 
 (defn view-node-dispatch
   [{:keys [type data-get]}]
@@ -85,7 +87,11 @@
       :text (format "Node Count: %d"
                     (.getNodeCount (.getHeader @opened-nx-file))))
     (.addTreeSelectionListener @nxtree-table
-                               (create-tree-selection-listener))))
+                               (create-tree-selection-listener))
+
+    (letfn [(f [_] (toggle-tree-sel @nxtree-table))]
+      (map-key @nxtree-table "ENTER" f)
+      (map-key @nxtree-table "SPACE" f))))
 
 (defn file-open-handler [_]
   (let [file-choice (choose-file :type :open

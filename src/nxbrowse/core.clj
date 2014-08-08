@@ -5,6 +5,7 @@
 
 #_(native!)
 
+;TODO: yaml config
 ;TODO: set exit_on_close, dispose shortcut for debug
 ;TODO: recently opened
 ;TODO: add trie autocompletion
