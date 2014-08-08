@@ -8,7 +8,7 @@
             [seesaw.mig :refer [mig-panel]]
             [clojure.tools.logging :as log]
             [nxbrowse.gui.handlers :refer :all]
-            [nxbrowse.util :refer [root-frame]]))
+            [nxbrowse.util :refer [root-frame opened-nx-file]]))
 
 (defn get-system-lafs
   "Returns a seq of system LAFs."
@@ -25,13 +25,27 @@
     (doseq [[k v] mapping]
       (.put input-map (keystroke k) v))))
 
+(def themes
+  (array-map
+    "Nimbus" "javax.swing.plaf.nimbus.NimbusLookAndFeel"
+    "Graphite" "org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel"
+    "System" (UIManager/getSystemLookAndFeelClassName)
+    "Silver Mist" "org.pushingpixels.substance.api.skin.SubstanceMistSilverLookAndFeel"
+    "Metal" "javax.swing.plaf.metal.MetalLookAndFeel"
+    "Blue Steel" "org.pushingpixels.substance.api.skin.SubstanceBusinessBlueSteelLookAndFeel"
+    "Dust" "org.pushingpixels.substance.api.skin.SubstanceDustLookAndFeel"
+    ;Gags
+    "Motif" "com.sun.java.swing.plaf.motif.MotifLookAndFeel"
+    "Challenger Deep" "org.pushingpixels.substance.api.skin.SubstanceChallengerDeepLookAndFeel"))
+
 (defn set-theme
-  [theme-class-name]
+  "Set current swing theme by simple theme names."
+  [theme]
   (try
-    (UIManager/setLookAndFeel theme-class-name)
+    (UIManager/setLookAndFeel (themes theme))
     (JFrame/setDefaultLookAndFeelDecorated false)
     (JDialog/setDefaultLookAndFeelDecorated false)
-    (when @root-frame
+    #_(when @root-frame
       (SwingUtilities/updateComponentTreeUI @root-frame))
     (when (= (System/getProperty "os.name") "Mac OS X")
       (set-osx-shortcuts))
@@ -43,22 +57,11 @@
 
 (defn init-gui
   "Instantiates all components of main window. Returns the root frame."
-  []
+  [open-app]
   (let [border-color
         (.. (UIManager/getDefaults)
             (getColor "Label.background")
             (darker))
-
-        lafs ["javax.swing.plaf.nimbus.NimbusLookAndFeel"
-              "org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel"
-              (UIManager/getSystemLookAndFeelClassName)
-              "org.pushingpixels.substance.api.skin.SubstanceMistSilverLookAndFeel"
-              "javax.swing.plaf.metal.MetalLookAndFeel"
-              "org.pushingpixels.substance.api.skin.SubstanceBusinessBlueSteelLookAndFeel"
-              "org.pushingpixels.substance.api.skin.SubstanceDustLookAndFeel"
-              ;Gags
-              "com.sun.java.swing.plaf.motif.MotifLookAndFeel"
-              "org.pushingpixels.substance.api.skin.SubstanceChallengerDeepLookAndFeel"]
 
         tree-panel (mig-panel :id :tree-panel
                               :constraints ["insets 0"] :items [])
@@ -87,27 +90,15 @@
                    (let [bg (button-group)]
                      (menu
                        :text "Select Theme"
-                       :items [(radio-menu-item
-                                 :text "Nimbus" :group bg :selected? true
-                                 :listen [:action (fn [_]
-                                                    (set-theme (lafs 0)))])
-                               (radio-menu-item
-                                 :text "Graphite" :group bg
-                                 :listen [:action (fn [_]
-                                                    (set-theme (lafs 1)))])
-                               (radio-menu-item
-                                 :text "System" :group bg
-                                 :listen [:action (fn [_]
-                                                    (set-theme (lafs 2)))])
-                               (radio-menu-item
-                                 :text "Silver Mist" :group bg
-                                 :listen [:action (fn [_]
-                                                    (set-theme (lafs 3)))])
-                               (radio-menu-item
-                                 :text "Metal" :group bg
-                                 :listen [:action (fn [_]
-                                                    (set-theme (lafs 4)))])
-                               ]))]
+                       :items
+                       (map #(radio-menu-item
+                              :text % :group bg
+                              :selected? (= (themes %)
+                                            (.. (UIManager/getLookAndFeel)
+                                                (getClass)
+                                                (getName)))
+                              :listen [:action (fn [_] (open-app %))])
+                            (keys themes))))]
 
         help-menu
         [(action :name "About"
@@ -165,10 +156,13 @@
   (.setAlwaysOnTop frame true)
   frame)
 
-(defn open-app []
+(defn open-app [theme]
   (invoke-later
-    (set-theme "javax.swing.plaf.nimbus.NimbusLookAndFeel")
-    (reset! root-frame (init-gui))
+    (set-theme theme)
+    (when @root-frame
+      (.dispose @root-frame))
+    (reset! root-frame (init-gui open-app))
+    (when @opened-nx-file (open-nx-file @opened-nx-file))
     (-> @root-frame
       center!
       show!)))

@@ -73,27 +73,33 @@
 (defn open-nx-file [file]
   "Initializes GUI components when nx file is opened. Sets opened-nx-file and
   nxtree-table atoms."
-  (try (when file
-         (reset! opened-nx-file (LazyNXFile. (.getAbsolutePath file)))
-         (reset! nxtree-table (create-tree-table (.getRoot @opened-nx-file)))
-         (config!
-           (select-id :#tree-panel)
-           :items [[(scrollable @nxtree-table)
-                    "dock center"]])
-         (config!
-           (select-id :#node-count)
-           :text (format "Node Count: %d"
-                         (.getNodeCount (.getHeader @opened-nx-file))))
-         (.addTreeSelectionListener @nxtree-table (create-tree-selection-listener)))
-       (catch NXException e (log/warnf "Couldn't open invalid file \"%s\""
-                                      (.getAbsolutePath file)))))
+  (when file
+    (reset! opened-nx-file file)
+    (reset! nxtree-table (create-tree-table (.getRoot @opened-nx-file)))
+    (config!
+      (select-id :#tree-panel)
+      :items [[(scrollable @nxtree-table)
+               "dock center"]])
+    (config!
+      (select-id :#node-count)
+      :text (format "Node Count: %d"
+                    (.getNodeCount (.getHeader @opened-nx-file))))
+    (.addTreeSelectionListener @nxtree-table
+                               (create-tree-selection-listener))))
 
 (defn file-open-handler [_]
-  (open-nx-file (choose-file :type :open
-                             :dir "."
-                             :multi? false
-                             :selection-mode :files-only
-                             :filters [["NX Files" ["nx"]]])))
+  (let [file-choice (choose-file :type :open
+                                 :dir "."
+                                 :multi? false
+                                 :selection-mode :files-only
+                                 :filters [["NX Files" ["nx"]]])]
+    (when file-choice
+      (try (open-nx-file (LazyNXFile. (.getAbsolutePath file-choice)))
+           (catch NXException e
+             (let [fe (format "%s\non file \"%s\""
+                              (.getMessage e)
+                              (.getAbsolutePath file-choice))]
+               (alert fe) (log/warn fe)))))))
 
 (defn navigate-path-handler [_]
   (when @nxtree-table

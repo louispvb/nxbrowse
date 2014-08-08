@@ -17,5 +17,5 @@
   [& args]
   (System/setProperty "apple.laf.useScreenMenuBar" "false")
   (log/infof "Starting nxbrowse")
-  (try (open-app)
+  (try (open-app "Nimbus")
        (catch Exception e (log/warn "Unhandled exception: " (.getMessage e)))))
