@@ -1,6 +1,9 @@
 # nxbrowse
 
-Browser for the NX (PKG4) game file format. Still under active development.
+Browser for the NX (PKG4) game file format. Able to view NX tree, keys, values,
+images, audio, etc. Search through NX files with regex support.
+
+Still under active development.
 
 
 ## Installation
