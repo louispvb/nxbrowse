@@ -59,8 +59,8 @@
                :string (array-map "Text Length" (.length @data-get))
                :point (array-map "x" (.x @data-get)
                                  "y" (.y @data-get))
-               :bitmap (array-map "Horizontal Res" "?"
-                                  "Vertical Res" "?"
+               :bitmap (array-map "Horizontal Res" (.getWidth @data-get)
+                                  "Vertical Res" (.getHeight @data-get)
                                   "Data Size (KiB)" "?")
                :audio (array-map "Audio Length" "?"
                                  "Format" "?"
@@ -73,6 +73,6 @@
   [{:keys [type data-get]}]
   (if (contains? #{:long :double :string :point} type)
     (if (= type :point)
-      (format "[x:%4d, y:%4d]" (.x @data-get) (.y @data-get))
+      (format "[x:%5d, y:%5d]" (.x @data-get) (.y @data-get))
       @data-get)
     ""))
