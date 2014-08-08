@@ -49,8 +49,8 @@
             (getColor "Label.background")
             (darker))
 
-        lafs ["org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel"
-              "javax.swing.plaf.nimbus.NimbusLookAndFeel"
+        lafs ["javax.swing.plaf.nimbus.NimbusLookAndFeel"
+              "org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel"
               (UIManager/getSystemLookAndFeelClassName)
               "org.pushingpixels.substance.api.skin.SubstanceMistSilverLookAndFeel"
               "javax.swing.plaf.metal.MetalLookAndFeel"
@@ -88,11 +88,11 @@
                      (menu
                        :text "Select Theme"
                        :items [(radio-menu-item
-                                 :text "Graphite" :group bg :selected? true
+                                 :text "Nimbus" :group bg :selected? true
                                  :listen [:action (fn [_]
                                                     (set-theme (lafs 0)))])
                                (radio-menu-item
-                                 :text "Nimbus" :group bg
+                                 :text "Graphite" :group bg
                                  :listen [:action (fn [_]
                                                     (set-theme (lafs 1)))])
                                (radio-menu-item
@@ -167,7 +167,7 @@
 
 (defn open-app []
   (invoke-later
-    (set-theme "org.pushingpixels.substance.api.skin.SubstanceGraphiteLookAndFeel")
+    (set-theme "javax.swing.plaf.nimbus.NimbusLookAndFeel")
     (reset! root-frame (init-gui))
     (-> @root-frame
       center!

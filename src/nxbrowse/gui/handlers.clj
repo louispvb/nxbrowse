@@ -20,15 +20,14 @@
   (let [view (select-id :#view-panel)]
     (.removeAll view)
     (case type
-      :string (.add view (scrollable (text :text (data-get)
+      :string (.add view (scrollable (text :text @data-get
                                            :multi-line? true
                                            :editable? false
                                            :wrap-lines? true
                                            :margin 10)))
       nil)
     (.validate view)
-    (.repaint view 50))
-  )
+    (.repaint view 50)))
 
 ;TODO: audio and bitmap selections
 (defn create-tree-selection-listener
@@ -36,8 +35,6 @@
   (reify
     TreeSelectionListener
     (valueChanged [this e]
-      (let []
-        )
       (let [path (.getPath e)
             props-table (select-id :#properties)
             node (.getLastPathComponent path)
@@ -50,8 +47,7 @@
         (doseq [[row-num [k v]] (map-indexed list props)]
           (insert-at! props-table row-num {:property k :value v}))
         ; View node
-        (view-node-dispatch (nx-attach-meta node))
-        ))))
+        (view-node-dispatch (nx-attach-meta node))))))
 
 (defn show-header-info [_]
   (if @opened-nx-file
@@ -59,20 +55,19 @@
           t (table :preferred-size [300 :by 200]
                    :model [:columns [:name :value]])
           info (array-map "Total Node Count" (.getNodeCount h)
-                          "Node Offset" (.getNodeOffset h)
                           "Bitmap Count" (.getBitmapCount h)
-                          "Bitmap Offset" (.getBitmapOffset h)
-                          "String Count" (.getStringCount h)
-                          "String Offset" (.getStringOffset h)
                           "Sound Count" (.getSoundCount h)
-                          "Sound Offset" (.getSoundOffset h))
+                          "String Count" (.getStringCount h)
+                          "Node Offset" (.getNodeOffset h)
+                          "Bitmap Offset" (.getBitmapOffset h)
+                          "Sound Offset" (.getSoundOffset h)
+                          "String Offset" (.getStringOffset h))
           f (frame :title "NX File Header"
                    :content t
                    :on-close :dispose)]
       (doseq [[row-num [k v]] (map-indexed list info)]
         (insert-at! t row-num {:name k :value v}))
-      (-> f (pack!) (show!) (.setLocationRelativeTo nil))
-      )
+      (-> f (pack!) (show!) (.setLocationRelativeTo nil)))
     (alert "A file must be opened to view header information.")))
 
 (defn open-nx-file [file]
@@ -110,4 +105,4 @@
                       [(.getRoot @opened-nx-file)]
                       split-path)
           tree-path (TreePath. (to-array node-path))]
-     (scroll-to-path @nxtree-table tree-path) )))
+     (scroll-to-path @nxtree-table tree-path))))

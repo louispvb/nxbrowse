@@ -12,36 +12,36 @@
           (instance? NXNullNode nxnode)
           {:type     :null
            :name     ""
-           :data-get (constantly nil)}
+           :data-get (delay nil)}
           (instance? NXLongNode nxnode)
           {:type     :long
            :name     "integral"
-           :data-get (fn [] (.getLong nxnode))}
+           :data-get (delay (.getLong nxnode))}
           (instance? NXDoubleNode nxnode)
           {:type     :double
            :name     "floating"
-           :data-get (fn [] (.getDouble nxnode))}
+           :data-get (delay (.getDouble nxnode))}
           (instance? NXStringNode nxnode)
           {:type     :string
            :name     "text"
-           :data-get (fn [] (.getString nxnode))}
+           :data-get (delay (.getString nxnode))}
           (instance? NXPointNode nxnode)
           {:type     :point
            :name     "point"
-           :data-get (fn [] (.getPoint nxnode))}
+           :data-get (delay (.getPoint nxnode))}
           (instance? NXBitmapNode nxnode)
           {:type     :bitmap
            :name     "bitmap"
-           :data-get (fn [] (.getImage nxnode))}
+           :data-get (delay (.getImage nxnode))}
           (instance? NXAudioNode nxnode)
           {:type     :audio
            :name     "audio"
-           :data-get (fn [] (.getAudioBuf nxnode))}
+           :data-get (delay (.getAudioBuf nxnode))}
           :else (do (log/warnf "Exception: Can't determine node type of \"%s\"."
                                (.getName nxnode))
                     {:type :null
                      :name "INVALID NODE"
-                     :data (constantly nil)}))
+                     :data-get (delay nil)}))
         {:node nxnode}))
 
 ;TODO bitmap resolution
@@ -54,11 +54,11 @@
     (array-map "Child Count" (.getChildCount node)
                "Child Index" (.getFirstChildIndex node))
     (reverse (case type
-               :long (array-map "Integral Data" (data-get))
-               :double (array-map "Floating Data" (data-get))
-               :string (array-map "Text Length" (.length (data-get)))
-               :point (array-map "x" (.x (data-get))
-                                 "y" (.y (data-get)))
+               :long (array-map "Integral Data" @data-get)
+               :double (array-map "Floating Data" @data-get)
+               :string (array-map "Text Length" (.length @data-get))
+               :point (array-map "x" (.x @data-get)
+                                 "y" (.y @data-get))
                :bitmap (array-map "Horizontal Res" "?"
                                   "Vertical Res" "?"
                                   "Data Size (KiB)" "?")
@@ -73,6 +73,6 @@
   [{:keys [type data-get]}]
   (if (contains? #{:long :double :string :point} type)
     (if (= type :point)
-      (let [p (data-get)] (format "[x:%s, y:%s]" (.x p) (.y p)))
-      (data-get))
+      (format "[x:%4d, y:%4d]" (.x @data-get) (.y @data-get))
+      @data-get)
     ""))

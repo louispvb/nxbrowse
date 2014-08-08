@@ -9,7 +9,10 @@
                  [org.clojure/tools.logging "0.3.0"]
                  [ch.qos.logback/logback-classic "1.1.2"]
                  [com.github.insubstantial/substance "7.2.1"]
-                 [com.github.insubstantial/trident "7.2.1"]]
+                 [com.github.insubstantial/trident "7.2.1"]
+                 [org.jogamp.gluegen/gluegen-rt-main "2.1.4"]
+                 [org.jogamp.jogl/jogl-all-main "2.1.4"]
+                 [org.jogamp.joal/joal "2.1.4"]]
   :main nxbrowse.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot [nxbrowse.core]}})
