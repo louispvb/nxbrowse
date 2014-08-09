@@ -10,7 +10,7 @@
             [clojure.tools.logging :as log]
             [nxbrowse.gui.handlers :refer :all]
             [nxbrowse.gui.recently-opened :as recent]
-            [nxbrowse.util :refer [root-frame opened-nx-file]]))
+            [nxbrowse.util :refer :all]))
 
 (defn get-system-lafs
   "Returns a seq of system LAFs."
@@ -45,6 +45,7 @@
   [theme]
   (try
     (UIManager/setLookAndFeel (themes theme "Numbus"))
+    (when (contains? themes theme) (swap! app-config assoc :theme theme))
     (JFrame/setDefaultLookAndFeelDecorated false)
     (JDialog/setDefaultLookAndFeelDecorated false)
     #_(when @root-frame
