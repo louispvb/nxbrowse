@@ -29,7 +29,12 @@
   (swap! app-config #(assoc % :recently-opened (recent/recently-opened-vector)))
   (spit config-path (ym/generate-string @app-config)))
 
-(defn select-id
-  "Select widget id from root frame"
-  [widget-id]
-  (select @root-frame [widget-id]))
+(defn select-vec
+  "Select with key vector from root frame."
+  [key-vec]
+  (select @root-frame key-vec))
+
+(defn select-key
+  "Select key from root frame"
+  [key-id]
+  (select-vec [key-id]))

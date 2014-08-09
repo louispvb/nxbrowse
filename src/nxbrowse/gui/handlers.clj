@@ -21,7 +21,7 @@
 
 (defn view-node-dispatch
   [{:keys [type data-get]}]
-  (let [view (select-id :#view-panel)]
+  (let [view (select-key :#view-panel)]
     (.removeAll view)
     (case type
       :string (.add view (scrollable (text :text @data-get
@@ -40,11 +40,11 @@
     TreeSelectionListener
     (valueChanged [this e]
       (let [path (.getPath e)
-            props-table (select-id :#properties)
+            props-table (select-key :#properties)
             node (.getLastPathComponent path)
             props (nx-property-map (nx-attach-meta node))]
         ; Set gui path
-        (text! (select-id :#tree-path)
+        (text! (select-key :#tree-path)
                (clojure.string/join "/" (.getPath path)))
         ; Fill properties table
         (clear! props-table)
@@ -64,9 +64,9 @@
                           "Bitmap Offset" (.getBitmapOffset h)
                           "Sound Offset" (.getSoundOffset h)
                           "String Offset" (.getStringOffset h))]
-      (clear! (select-id :#properties))
+      (clear! (select-key :#properties))
       (doseq [[row-num [k v]] (map-indexed list info)]
-        (insert-at! (select-id :#properties) row-num {:property k :value v})))
+        (insert-at! (select-key :#properties) row-num {:property k :value v})))
     (alert "A file must be opened to view header information.")))
 
 (defn open-nx-file
@@ -78,13 +78,13 @@
     (reset! nxtree-table (create-tree-table (.getRoot @opened-nx-file)))
     ; Add tree table
     (config!
-      (select-id :#tree-panel)
+      (select-key :#tree-panel)
       :items [[(scrollable @nxtree-table)
                "dock center"]])
 
     ; Display node count
     (config!
-      (select-id :#node-count)
+      (select-key :#node-count)
       :text (format "Node Count: %d"
                     (.getNodeCount (.getHeader @opened-nx-file))))
 
@@ -114,7 +114,7 @@
 
 (defn navigate-path-handler [_]
   (when @nxtree-table
-    (let [user-path (value (select-id :#tree-path))
+    (let [user-path (value (select-key :#tree-path))
           split-path (rest (clojure.string/split user-path #"/"))
           node-path (reduce
                       (fn [acc s]
