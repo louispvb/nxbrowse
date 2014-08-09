@@ -69,11 +69,11 @@
                               :constraints ["insets 0"] :items [])
         view-panel (border-panel :id :view-panel)
         properties-panel
-        (scrollable (table
-                      :id :properties
-                      :show-grid? false
-                      :model [:columns [:property :value]
-                              :rows []]))
+        (scrollable (let [table (table :id :properties :show-grid? false
+                                       :model [:columns [:property :value]
+                                       :rows []])]
+                      (.setTableHeader table nil)
+                      table))
 
         file-menu [(action :name "Open File.." :tip "Open an nx file"
                            :key "menu O" :handler file-open-handler)

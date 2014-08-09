@@ -7,9 +7,7 @@
 
 #_(native!)
 
-;TODO: yaml config
 ;TODO: set exit_on_close, dispose shortcut for debug
-;TODO: recently opened
 ;TODO: add trie autocompletion
 ;TODO: drag and drop bitmaps out of file and "save to file" feature
 ;TODO: hook up properties panel to audio and bitmap properties
