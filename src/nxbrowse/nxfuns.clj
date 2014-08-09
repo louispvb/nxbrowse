@@ -44,7 +44,6 @@
                      :data-get (delay nil)}))
         {:node nxnode}))
 
-;TODO bitmap resolution
 ;TODO audio length, type
 
 (defn nx-property-map
@@ -59,12 +58,16 @@
                :string (array-map "Text Length" (.length @data-get))
                :point (array-map "x" (.x @data-get)
                                  "y" (.y @data-get))
-               :bitmap (array-map "Horizontal Res" (.getWidth @data-get)
-                                  "Vertical Res" (.getHeight @data-get)
-                                  "Data Size (KiB)" "?")
+               :bitmap (let [w (.getWidth @data-get)
+                             h (.getHeight @data-get)]
+                           (array-map "Horizontal Res" w
+                                  "Vertical Res" h
+                                  "Data Size (KiB)" (int (/ (* w h) 256))))
                :audio (array-map "Audio Length" "?"
                                  "Format" "?"
-                                 "Data Size (KiB)" "?")
+                                 "Data Size (KiB)" (int (/ (.readableBytes
+                                                             @data-get)
+                                                           256)))
                (array-map)))))
 
 (defn nx-data-text-simple
