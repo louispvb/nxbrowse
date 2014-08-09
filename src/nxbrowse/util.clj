@@ -8,7 +8,6 @@
 
 ; Dirty dirty mutable state!
 (def opened-nx-file (atom nil))
-(def nxtree-table (atom nil))
 (def root-frame (atom nil))
 (def app-config (atom {:theme "Nimbus" :recently-opened []}))
 
@@ -37,4 +36,5 @@
 (defn select-key
   "Select key from root frame"
   [key-id]
-  (select-vec [key-id]))
+  (let [sel (select-vec [key-id])]
+    (if (seq? sel) (first sel) sel)))

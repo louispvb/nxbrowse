@@ -4,7 +4,8 @@
            (javax.swing.tree TreePath)
            (java.awt.event KeyEvent)
            (javax.swing.event TreeSelectionListener)
-           (java.lang Runtime))
+           (java.lang Runtime)
+           (java.nio.file NoSuchFileException))
   (:require [clojure.tools.logging :as log]
             [seesaw.core :refer :all]
             [seesaw.keymap :refer [map-key]]
@@ -73,30 +74,32 @@
   "Initializes GUI components when nx file is opened. Sets opened-nx-file and
   nxtree-table atoms."
   [file]
-  (when-let [file (if (string? file) (LazyNXFile. file) file)]
-    (reset! opened-nx-file file)
-    (reset! nxtree-table (create-tree-table (.getRoot @opened-nx-file)))
-    ; Add tree table
-    (config!
-      (select-key :#tree-panel)
-      :items [[(scrollable @nxtree-table)
-               "dock center"]])
+  (try (when-let [file (if (string? file) (LazyNXFile. file) file)]
+         (reset! opened-nx-file file)
+         ; Add tree table
+         (config!
+           (select-key :#tree-panel)
+           :items [[(scrollable (create-tree-table (.getRoot @opened-nx-file)))
+                    "dock center"]])
 
-    ; Display node count
-    (config!
-      (select-key :#node-count)
-      :text (format "Node Count: %d"
-                    (.getNodeCount (.getHeader @opened-nx-file))))
+         ; Display node count
+         (config!
+           (select-key :#node-count)
+           :text (format "Node Count: %d"
+                         (.getNodeCount (.getHeader @opened-nx-file))))
 
-    ; Listeners
-    (.addTreeSelectionListener @nxtree-table
-                               (create-tree-selection-listener))
-    (letfn [(f [_] (toggle-tree-sel @nxtree-table))]
-      (map-key @nxtree-table "ENTER" f)
-      (map-key @nxtree-table "SPACE" f))
-    ; Add recently opened to config
-    (recent/add-recent-path! (.getFilePath file))
-    (recent/update-recent-menu! @root-frame open-nx-file)))
+         ; Listeners
+         (let [treetable (select-key :JXTreeTable)]
+           (.addTreeSelectionListener treetable
+                                      (create-tree-selection-listener))
+           (letfn [(f [_] (toggle-tree-sel (select-key :JXTreeTable)))]
+             (map-key treetable "ENTER" f)
+             (map-key treetable "SPACE" f)))
+         ; Add recently opened to config
+         (recent/add-recent-path! (.getFilePath file))
+         (recent/update-recent-menu! @root-frame open-nx-file))
+       (catch NoSuchFileException e
+         (alert "Could not open file due to requested file not found."))))
 
 (defn file-open-handler [_]
   (let [file-choice (choose-file :type :open
@@ -113,7 +116,7 @@
                (alert fe) (log/warn fe)))))))
 
 (defn navigate-path-handler [_]
-  (when @nxtree-table
+  (when (select-key :JXTreeTable)
     (let [user-path (value (select-key :#tree-path))
           split-path (rest (clojure.string/split user-path #"/"))
           node-path (reduce
@@ -122,7 +125,7 @@
                       [(.getRoot @opened-nx-file)]
                       split-path)
           tree-path (TreePath. (to-array node-path))]
-     (scroll-to-path @nxtree-table tree-path))))
+     (scroll-to-path (select-key :JXTreeTable) tree-path))))
 
 (defn most-recent-handler [_]
   (if-let [p (first (recent/recently-opened-vector))]
