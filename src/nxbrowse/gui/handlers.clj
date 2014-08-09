@@ -3,7 +3,8 @@
            (us.aaronweiss.pkgnx NXException LazyNXFile NXNode)
            (javax.swing.tree TreePath)
            (java.awt.event KeyEvent)
-           (javax.swing.event TreeSelectionListener))
+           (javax.swing.event TreeSelectionListener)
+           (java.lang Runtime))
   (:require [clojure.tools.logging :as log]
             [seesaw.core :refer :all]
             [seesaw.keymap :refer [map-key]]
@@ -13,6 +14,7 @@
             [nxbrowse.nxfuns :refer [nx-attach-meta
                                      nx-property-map]]
             [nxbrowse.util :refer :all]
+            [nxbrowse.gui.recently-opened :as recent]
             [nxbrowse.gui.tree-table :refer [create-tree-table
                                              scroll-to-path
                                              toggle-tree-sel]]))
@@ -72,26 +74,34 @@
       (-> f (pack!) (show!) (.setLocationRelativeTo nil)))
     (alert "A file must be opened to view header information.")))
 
-(defn open-nx-file [file]
+(defn open-nx-file
   "Initializes GUI components when nx file is opened. Sets opened-nx-file and
   nxtree-table atoms."
-  (when file
+  [file]
+  (when-let [file (if (string? file) (LazyNXFile. file) file)]
     (reset! opened-nx-file file)
     (reset! nxtree-table (create-tree-table (.getRoot @opened-nx-file)))
+    ; Add tree table
     (config!
       (select-id :#tree-panel)
       :items [[(scrollable @nxtree-table)
                "dock center"]])
+
+    ; Display node count
     (config!
       (select-id :#node-count)
       :text (format "Node Count: %d"
                     (.getNodeCount (.getHeader @opened-nx-file))))
+
+    ; Listeners
     (.addTreeSelectionListener @nxtree-table
                                (create-tree-selection-listener))
-
     (letfn [(f [_] (toggle-tree-sel @nxtree-table))]
       (map-key @nxtree-table "ENTER" f)
-      (map-key @nxtree-table "SPACE" f))))
+      (map-key @nxtree-table "SPACE" f))
+    ; Add recently opened to config
+    (recent/add-recent-path! (.getFilePath file))
+    (recent/update-recent-menu! @root-frame open-nx-file)))
 
 (defn file-open-handler [_]
   (let [file-choice (choose-file :type :open
@@ -118,3 +128,22 @@
                       split-path)
           tree-path (TreePath. (to-array node-path))]
      (scroll-to-path @nxtree-table tree-path))))
+
+(defn most-recent-handler [_]
+  (if-let [p (first (recent/recently-opened-vector))]
+    (open-nx-file p)
+    (alert "There are no recent files to open.")))
+
+(def system-exit-thread
+  (Thread. (fn []
+             (log/info "Stopping nxbrowse.")
+             (save-config!)
+             (invoke-now (.setVisible @root-frame false)
+                         (.dispose @root-frame))
+             (System/exit 0))))
+
+(defn hook-exit-thread!
+  []
+  (log/debug "Hooking exit thread..")
+  (-> (Runtime/getRuntime)
+      (.addShutdownHook system-exit-thread)))

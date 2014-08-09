@@ -1,6 +1,7 @@
 (ns nxbrowse.gui.app
   (:import (javax.swing UIManager JFrame JDialog InputMap SwingUtilities)
-           (javax.swing.text DefaultEditorKit))
+           (javax.swing.text DefaultEditorKit)
+           (us.aaronweiss.pkgnx LazyNXFile))
   (:require [seesaw.core :refer :all]
             [seesaw.border :refer :all]
             [seesaw.keystroke :refer [keystroke]]
@@ -8,6 +9,7 @@
             [seesaw.mig :refer [mig-panel]]
             [clojure.tools.logging :as log]
             [nxbrowse.gui.handlers :refer :all]
+            [nxbrowse.gui.recently-opened :as recent]
             [nxbrowse.util :refer [root-frame opened-nx-file]]))
 
 (defn get-system-lafs
@@ -42,7 +44,7 @@
   "Set current swing theme by simple theme names."
   [theme]
   (try
-    (UIManager/setLookAndFeel (themes theme))
+    (UIManager/setLookAndFeel (themes theme "Numbus"))
     (JFrame/setDefaultLookAndFeelDecorated false)
     (JDialog/setDefaultLookAndFeelDecorated false)
     #_(when @root-frame
@@ -73,15 +75,19 @@
                       :model [:columns [:property :value]
                               :rows []]))
 
-        file-menu [(action :name "Open" :tip "Open an nx file"
+        file-menu [(action :name "Open File.." :tip "Open an nx file"
                            :key "menu O" :handler file-open-handler)
+                   (action :name "Open Most Recent"
+                           :key "menu R"
+                           :handler most-recent-handler)
+                   (recent/recent-open-menu
+                     :name "Reopen File"
+                     :handler (fn [s] (open-nx-file s)))
                    :separator
-
                    (action :name "Quit"
                            :key "menu Q"
-                           :handler (fn [e]
-                                      (.dispose (to-frame e))
-                                      (System/exit 0)))]
+                           :handler (fn [_] (.start system-exit-thread)))]
+
         ; TODO create new frame instead of updating current frame theme
         ; TODO make atom of currently selected theme and selected? for all
         view-menu [(action :name "Header Information"

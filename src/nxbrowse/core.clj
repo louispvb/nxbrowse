@@ -1,6 +1,8 @@
 (ns nxbrowse.core
-  (:require [nxbrowse.gui.app :refer [open-app]]
-            [clojure.tools.logging :as log])
+  (:require [clojure.tools.logging :as log]
+            [nxbrowse.gui.app :refer [open-app]]
+            [nxbrowse.gui.handlers :refer [hook-exit-thread!]]
+            [nxbrowse.util :refer [load-config! app-config]])
   (:gen-class))
 
 #_(native!)
@@ -18,5 +20,7 @@
   [& args]
   (System/setProperty "apple.laf.useScreenMenuBar" "false")
   (log/infof "Starting nxbrowse")
-  (try (open-app "Nimbus")
+  (hook-exit-thread!)
+  (load-config!)
+  (try (open-app (:theme @app-config))
        (catch Exception e (log/warn "Unhandled exception: " (.getMessage e)))))
