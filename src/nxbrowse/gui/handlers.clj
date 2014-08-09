@@ -56,8 +56,6 @@
 (defn show-header-info [_]
   (if @opened-nx-file
     (let [h (.getHeader @opened-nx-file)
-          t (table :preferred-size [300 :by 200]
-                   :model [:columns [:name :value]])
           info (array-map "Total Node Count" (.getNodeCount h)
                           "Bitmap Count" (.getBitmapCount h)
                           "Sound Count" (.getSoundCount h)
@@ -65,13 +63,10 @@
                           "Node Offset" (.getNodeOffset h)
                           "Bitmap Offset" (.getBitmapOffset h)
                           "Sound Offset" (.getSoundOffset h)
-                          "String Offset" (.getStringOffset h))
-          f (frame :title "NX File Header"
-                   :content t
-                   :on-close :dispose)]
+                          "String Offset" (.getStringOffset h))]
+      (clear! (select-id :#properties))
       (doseq [[row-num [k v]] (map-indexed list info)]
-        (insert-at! t row-num {:name k :value v}))
-      (-> f (pack!) (show!) (.setLocationRelativeTo nil)))
+        (insert-at! (select-id :#properties) row-num {:property k :value v})))
     (alert "A file must be opened to view header information.")))
 
 (defn open-nx-file
