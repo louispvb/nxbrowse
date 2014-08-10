@@ -12,7 +12,7 @@
             [seesaw.table :refer [clear!
                                   insert-at!]]
             [seesaw.chooser :refer [choose-file]]
-            [nxbrowse.nxfuns :refer [nx-attach-meta
+            [nxbrowse.nx-data :refer [nx-attach-meta
                                      nx-property-map]]
             [nxbrowse.util :refer :all]
             [nxbrowse.gui.recently-opened :as recent]

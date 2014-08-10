@@ -1,6 +1,6 @@
 (ns nxbrowse.core
   (:require [clojure.tools.logging :as log]
-            [nxbrowse.gui.app :refer [open-app]]
+            [nxbrowse.gui.core :refer [open-gui]]
             [nxbrowse.gui.handlers :refer [hook-exit-thread!]]
             [nxbrowse.util :refer [load-config! app-config]])
   (:gen-class))
@@ -20,5 +20,5 @@
   (log/infof "Starting nxbrowse")
   (hook-exit-thread!)
   (load-config!)
-  (try (open-app (:theme @app-config))
+  (try (open-gui (:theme @app-config))
        (catch Exception e (log/warn "Unhandled exception: " (.getMessage e)))))

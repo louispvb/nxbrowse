@@ -1,4 +1,4 @@
-(ns nxbrowse.gui.app
+(ns nxbrowse.gui.core
   (:import (javax.swing UIManager JFrame JDialog InputMap SwingUtilities)
            (javax.swing.text DefaultEditorKit)
            (us.aaronweiss.pkgnx LazyNXFile))
@@ -163,12 +163,12 @@
   (.setAlwaysOnTop frame true)
   frame)
 
-(defn open-app [theme]
+(defn open-gui [theme]
   (invoke-later
     (set-theme theme)
     (when @root-frame
       (.dispose @root-frame))
-    (reset! root-frame (init-gui open-app))
+    (reset! root-frame (init-gui open-gui))
     (when @opened-nx-file (open-nx-file @opened-nx-file))
     (-> @root-frame
       center!

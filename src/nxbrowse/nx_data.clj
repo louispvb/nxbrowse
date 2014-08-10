@@ -1,4 +1,4 @@
-(ns nxbrowse.nxfuns
+(ns nxbrowse.nx-data
   (:import (us.aaronweiss.pkgnx.nodes NXNullNode NXLongNode NXDoubleNode
                                       NXStringNode NXPointNode NXBitmapNode
                                       NXAudioNode)
@@ -74,7 +74,7 @@
   "Returns an NXNode's representation as text only if it can be displayed simply
   as so (no binary data)."
   [{:keys [type data-get]}]
-  (if (contains? #{:long :double :string :point} type)
+  (if (#{:long :double :string :point} type)
     (if (= type :point)
       (format "[x:%5d, y:%5d]" (.x @data-get) (.y @data-get))
       @data-get)

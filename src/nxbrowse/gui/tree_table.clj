@@ -5,7 +5,7 @@
   (:require [clojure.tools.logging :as log]
             [seesaw.core :refer :all]
             [nxbrowse.util :refer [root-frame]]
-            [nxbrowse.nxfuns :refer :all]))
+            [nxbrowse.nx-data :refer :all]))
 
 (defn toggle-tree-sel
   "Toggles currently selected path."
