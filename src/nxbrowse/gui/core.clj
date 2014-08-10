@@ -1,7 +1,6 @@
 (ns nxbrowse.gui.core
   (:import (javax.swing UIManager JFrame JDialog InputMap SwingUtilities)
-           (javax.swing.text DefaultEditorKit)
-           (us.aaronweiss.pkgnx LazyNXFile))
+           (javax.swing.text DefaultEditorKit))
   (:require [seesaw.core :refer :all]
             [seesaw.border :refer :all]
             [seesaw.keystroke :refer [keystroke]]
@@ -17,16 +16,6 @@
   []
   (seq (UIManager/getInstalledLookAndFeels)))
 
-(defn set-osx-shortcuts
-  []
-  (let [input-map (UIManager/get "TextField.focusInputMap")
-        mapping {"menu C" DefaultEditorKit/copyAction
-                 "menu V" DefaultEditorKit/pasteAction
-                 "menu X" DefaultEditorKit/cutAction
-                 "menu A" DefaultEditorKit/selectAllAction}]
-    (doseq [[k v] mapping]
-      (.put input-map (keystroke k) v))))
-
 (def themes
   (array-map
     "Nimbus" "javax.swing.plaf.nimbus.NimbusLookAndFeel"
@@ -40,24 +29,6 @@
     "Motif" "com.sun.java.swing.plaf.motif.MotifLookAndFeel"
     "Challenger Deep" "org.pushingpixels.substance.api.skin.SubstanceChallengerDeepLookAndFeel"))
 
-(defn set-theme
-  "Set current swing theme by simple theme names."
-  [theme]
-  (try
-    (UIManager/setLookAndFeel (themes theme "Numbus"))
-    (when (contains? themes theme) (swap! app-config assoc :theme theme))
-    (JFrame/setDefaultLookAndFeelDecorated false)
-    (JDialog/setDefaultLookAndFeelDecorated false)
-    #_(when @root-frame
-      (SwingUtilities/updateComponentTreeUI @root-frame))
-    (when (= (System/getProperty "os.name") "Mac OS X")
-      (set-osx-shortcuts))
-    (log/info "Current LAF: " (.getID (UIManager/getLookAndFeel)))
-    (log/debug "Supported LAFs:")
-    (doseq [laf (get-system-lafs)]
-      (log/debug (.getName laf) ": " (.getClassName laf)))
-    (catch Exception e (println "Could not set LAF: " (.getMessage e)))))
-
 (defn init-gui
   "Instantiates all components of main window. Returns the root frame."
   [open-app]
@@ -66,6 +37,7 @@
             (getColor "Label.background")
             (darker))
 
+        ; PANELS ---------------------------------------------------------------
         tree-panel (mig-panel :id :tree-panel
                               :constraints ["insets 0"] :items [])
         view-panel (border-panel :id :view-panel)
@@ -76,6 +48,7 @@
                       (.setTableHeader table nil)
                       table))
 
+        ; MENUS ----------------------------------------------------------------
         file-menu [(action :name "Open File.." :tip "Open an nx file"
                            :key "menu O" :handler file-open-handler)
                    (action :name "Open Most Recent"
@@ -89,8 +62,6 @@
                            :key "menu Q"
                            :handler (fn [_] (.start system-exit-thread)))]
 
-        ; TODO create new frame instead of updating current frame theme
-        ; TODO make atom of currently selected theme and selected? for all
         view-menu [(action :name "Header Information"
                            :handler show-header-info)
                    :separator
@@ -111,6 +82,8 @@
         [(action :name "About"
                  :handler (fn [_]
                             (alert "NXBrowse\nBrowser for PKG4 NX file format\nhttp://github.com/louispvb/nxbrowse")))]
+
+        ; BARS -----------------------------------------------------------------
         path-bar
         (mig-panel
           :constraints ["fill" "5[][]5" "2[]2"]
@@ -128,7 +101,8 @@
                                   (menu :text "View" :items view-menu)
                                   (menu :text "Help" :items help-menu)])
 
-        content-panel
+        ; ROOT -----------------------------------------------------------------
+        root-content-pane
         (mig-panel
           :constraints ["" "" ""]
           :items [[(left-right-split
@@ -144,12 +118,26 @@
 
         gui
         (frame :title "NXBrowse" :menubar menu-bar
-               :size [1000 :by 600] :content content-panel)]
-    (let [tree-path (select gui [:#tree-path])]
-      (listen tree-path :focus-gained
-              (fn [_] (.select tree-path 0 (.. tree-path (getText) (length))))))
-    (map-key path-bar "ENTER" navigate-path-handler)
+               :size [1000 :by 600] :content root-content-pane)
+
+        ; Listeners ------------------------------------------------------------
+        tree-path (select gui [:#tree-path])
+        _ (listen
+            tree-path :focus-gained
+            (fn [_] (.select tree-path 0 (.. tree-path (getText) (length)))))
+        _ (map-key path-bar "ENTER" navigate-path-handler)]
     gui))
+
+(defn set-osx-shortcuts
+  "Sets the shortcuts for editing actions to use CMD on OSX."
+  []
+  (let [input-map (UIManager/get "TextField.focusInputMap")
+        mapping {"menu C" DefaultEditorKit/copyAction
+                 "menu V" DefaultEditorKit/pasteAction
+                 "menu X" DefaultEditorKit/cutAction
+                 "menu A" DefaultEditorKit/selectAllAction}
+        _ (doseq [[k v] mapping] (.put input-map (keystroke k) v))]
+    nil))
 
 (defn center!
   "Sets frame to center of the screen."
@@ -157,11 +145,21 @@
   (.setLocationRelativeTo frame nil)
   frame)
 
-(defn force-top!
-  "Forces frame to always be on top."
-  [frame]
-  (.setAlwaysOnTop frame true)
-  frame)
+(defn- set-theme
+  "Set current swing theme by simple theme names."
+  [theme]
+  (try
+    (UIManager/setLookAndFeel (themes theme "Numbus"))
+    (when (contains? themes theme) (swap! app-config assoc :theme theme))
+    (JFrame/setDefaultLookAndFeelDecorated false)
+    (JDialog/setDefaultLookAndFeelDecorated false)
+    (when (= (System/getProperty "os.name") "Mac OS X")
+      (set-osx-shortcuts))
+    (log/info "Current LAF: " (.getID (UIManager/getLookAndFeel)))
+    (log/debug "Supported LAFs:")
+    (doseq [laf (get-system-lafs)]
+      (log/debug (.getName laf) ": " (.getClassName laf)))
+    (catch Exception e (println "Could not set LAF: " (.getMessage e)))))
 
 (defn open-gui [theme]
   (invoke-later

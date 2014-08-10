@@ -2,7 +2,6 @@
   (:import (us.aaronweiss.pkgnx.internal NXHeader)
            (us.aaronweiss.pkgnx NXException LazyNXFile NXNode)
            (javax.swing.tree TreePath)
-           (java.awt.event KeyEvent)
            (javax.swing.event TreeSelectionListener)
            (java.lang Runtime)
            (java.nio.file NoSuchFileException))
@@ -19,6 +18,14 @@
             [nxbrowse.gui.tree-table :refer [create-tree-table
                                              scroll-to-path
                                              toggle-tree-sel]]))
+
+(def system-exit-thread
+  (Thread. (fn []
+             (log/info "Stopping nxbrowse.")
+             (save-config!)
+             (invoke-now (.setVisible @root-frame false)
+                         (.dispose @root-frame))
+             (System/exit 0))))
 
 (defn view-node-dispatch
   [{:keys [type data-get]}]
@@ -64,10 +71,12 @@
                           "Node Offset" (.getNodeOffset h)
                           "Bitmap Offset" (.getBitmapOffset h)
                           "Sound Offset" (.getSoundOffset h)
-                          "String Offset" (.getStringOffset h))]
-      (clear! (select-key :#properties))
-      (doseq [[row-num [k v]] (map-indexed list info)]
-        (insert-at! (select-key :#properties) row-num {:property k :value v})))
+                          "String Offset" (.getStringOffset h))
+          _ (clear! (select-key :#properties))
+          _ (doseq [[row-num [k v]] (map-indexed list info)]
+              (insert-at! (select-key :#properties)
+                          row-num {:property k :value v}))]
+      nil)
     (alert "A file must be opened to view header information.")))
 
 (defn open-nx-file
@@ -124,21 +133,14 @@
                         (conj acc (.getChild (last acc) s)))
                       [(.getRoot @opened-nx-file)]
                       split-path)
-          tree-path (TreePath. (to-array node-path))]
-     (scroll-to-path (select-key :JXTreeTable) tree-path))))
+          tree-path (TreePath. (to-array node-path))
+          _ (scroll-to-path (select-key :JXTreeTable) tree-path)]
+     nil)))
 
 (defn most-recent-handler [_]
   (if-let [p (first (recent/recently-opened-vector))]
     (open-nx-file p)
     (alert "There are no recent files to open.")))
-
-(def system-exit-thread
-  (Thread. (fn []
-             (log/info "Stopping nxbrowse.")
-             (save-config!)
-             (invoke-now (.setVisible @root-frame false)
-                         (.dispose @root-frame))
-             (System/exit 0))))
 
 (defn hook-exit-thread!
   []

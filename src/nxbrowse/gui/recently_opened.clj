@@ -34,10 +34,11 @@
   "Update recent menu's list of actions. Takes a handler to open files that must
   accept one absolute path argument."
   [select-from open-handler]
-  (let [menu (select select-from [:#recent-menu])]
-    (.removeAll menu)
-    (doseq [a (get-open-actions open-handler)]
-      (.add menu a))))
+  (let [menu (select select-from [:#recent-menu])
+        _ (.removeAll menu)
+        _ (doseq [a (get-open-actions open-handler)]
+            (.add menu a))]
+    nil))
 
 (defn recent-open-menu
   "Create a recent open menu. Takes a handler to open files that must accept one

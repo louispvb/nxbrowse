@@ -6,7 +6,6 @@
             [clojure.tools.logging :as log]
             [nxbrowse.gui.recently-opened :as recent]))
 
-; Dirty dirty mutable state!
 (def opened-nx-file (atom nil))
 (def root-frame (atom nil))
 (def app-config (atom {:theme "Nimbus" :recently-opened []}))
@@ -15,18 +14,23 @@
 
 (defn load-config!
   []
-  (let [file (File. config-path)]
-    (when (and (.exists file) (not (.isDirectory file)))
-      (log/debugf "Loading configuration from \"%s\"" (.getAbsolutePath file))
-      (reset! app-config (ym/parse-string (slurp config-path)))
-      (doseq [rp (:recently-opened @app-config)]
-        (recent/add-recent-path! rp)))))
+  (let [file (File. config-path)
+        _ (when (and (.exists file) (not (.isDirectory file)))
+            (log/debugf "Loading configuration from \"%s\""
+                        (.getAbsolutePath file))
+            (reset! app-config (ym/parse-string (slurp config-path)))
+            (doseq [rp (:recently-opened @app-config)]
+              (recent/add-recent-path! rp)))]
+    nil))
 
 (defn save-config!
   []
-  (log/debug "Saving recently opened vector " (recent/recently-opened-vector))
-  (swap! app-config #(assoc % :recently-opened (recent/recently-opened-vector)))
-  (spit config-path (ym/generate-string @app-config)))
+  (let [_ (log/debug "Saving recently opened vector "
+                     (recent/recently-opened-vector))
+        _ (swap! app-config
+                 #(assoc % :recently-opened (recent/recently-opened-vector)))
+        _ (spit config-path (ym/generate-string @app-config))]
+    nil))
 
 (defn select-vec
   "Select with key vector from root frame."
