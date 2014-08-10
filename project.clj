@@ -10,9 +10,9 @@
                  [ch.qos.logback/logback-classic "1.1.2"]
                  [com.github.insubstantial/substance "7.2.1"]
                  [com.github.insubstantial/trident "7.2.1"]
-                 [org.jogamp.gluegen/gluegen-rt-main "2.1.4"]
-                 [org.jogamp.jogl/jogl-all-main "2.1.4"]
-                 [org.jogamp.joal/joal "2.1.4"]
+                 [org.jogamp.gluegen/gluegen-rt-main "2.2.0"]
+                 [org.jogamp.jogl/jogl-all-main "2.2.0"]
+                 [org.jogamp.joal/joal-main "2.2.0"]
                  [clj-yaml "0.4.0"]]
   :main nxbrowse.core
   :target-path "target/%s"
