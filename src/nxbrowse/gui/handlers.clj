@@ -4,7 +4,8 @@
            (javax.swing.tree TreePath)
            (javax.swing.event TreeSelectionListener)
            (java.lang Runtime)
-           (java.nio.file NoSuchFileException))
+           (java.nio.file NoSuchFileException)
+           (io.netty.buffer ByteBufInputStream))
   (:require [clojure.tools.logging :as log]
             [seesaw.core :refer :all]
             [seesaw.keymap :refer [map-key]]
@@ -14,6 +15,7 @@
             [nxbrowse.nx-data :refer [nx-attach-meta
                                      nx-property-map]]
             [nxbrowse.util :refer :all]
+            [nxbrowse.sound :refer [load-al-data play]]
             [nxbrowse.gui.recently-opened :as recent]
             [nxbrowse.gui.tree-table :refer [create-tree-table
                                              scroll-to-path
@@ -37,6 +39,8 @@
                                            :editable? false
                                            :wrap-lines? true
                                            :margin 10)))
+      :audio (do (load-al-data (ByteBufInputStream. @data-get))
+                 (play))
       nil)
     (.validate view)
     (.repaint view 50)))
